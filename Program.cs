@@ -361,11 +361,6 @@ namespace QuickSearch
 
             _startupItem.Checked = StartupManager.IsInstalled();
 
-            if (_silentStart)
-            {
-                BeginInvoke(new MethodInvoker(delegate { EnsureIndex(); }));
-            }
-
             if (_openSettingsOnStart)
             {
                 BeginInvoke(new MethodInvoker(delegate { ShowSettings(); }));
@@ -1196,10 +1191,23 @@ namespace QuickSearch
             else
             {
                 List<KeyValuePair<int, AppEntry>> matches = new List<KeyValuePair<int, AppEntry>>();
+                bool hasExactMatch = false;
                 for (int i = 0; i < _all.Count; i++)
                 {
-                    int score = Score(_all[i], q);
-                    if (score >= 0) matches.Add(new KeyValuePair<int, AppEntry>(score, _all[i]));
+                    if (string.Equals(_all[i].NameLower, q, StringComparison.Ordinal))
+                    {
+                        matches.Add(new KeyValuePair<int, AppEntry>(0, _all[i]));
+                        hasExactMatch = true;
+                    }
+                }
+
+                if (!hasExactMatch)
+                {
+                    for (int i = 0; i < _all.Count; i++)
+                    {
+                        int score = Score(_all[i], q);
+                        if (score >= 0) matches.Add(new KeyValuePair<int, AppEntry>(score, _all[i]));
+                    }
                 }
 
                 matches.Sort(delegate (KeyValuePair<int, AppEntry> a, KeyValuePair<int, AppEntry> b)
